@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "520023375878",
+    "project_id": "profealtoque-ac64a",
+    "storage_bucket": "profealtoque-ac64a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:520023375878:android:b600637ce88a96a4244387",
+        "android_client_info": {
+          "package_name": "com.example.profealtoque"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLxRyGBgEBINoE5aQNml0ou7SL7zJ4uHE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
