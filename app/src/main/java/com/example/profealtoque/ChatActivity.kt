@@ -1,147 +1,118 @@
 package com.example.profealtoque
-
 import VirtualProfessor
 import android.os.Bundle
-import android.util.Log
+import android.view.Gravity
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import android.view.View
-import java.util.Locale
+import com.example.profealtoque.BuildConfig
+import com.example.profealtoque.R
 
 class ChatActivity : AppCompatActivity() {
 
     private lateinit var chatScrollView: ScrollView
     private lateinit var chatInput: EditText
     private lateinit var sendButton: Button
-    private lateinit var inputLayout: LinearLayout
-    private lateinit var messagesLayout: LinearLayout // El contenedor donde se agregan los mensajes
-    private lateinit var virtualProfessor: VirtualProfessor // Instancia de VirtualProfessor
-
-    private var selectedSubject: String? = null // Para almacenar la materia seleccionada
+    private lateinit var messagesLayout: LinearLayout
+    private lateinit var virtualProfessor: VirtualProfessor
+    private var selectedSubject: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
-        // Inicializa los componentes del layout
         chatScrollView = findViewById(R.id.chatScrollView)
         chatInput = findViewById(R.id.chatInput)
         sendButton = findViewById(R.id.sendButton)
-        inputLayout = findViewById(R.id.inputLayout)
         messagesLayout = findViewById(R.id.messagesLayout)
 
-        // Crea una instancia de VirtualProfessor
         virtualProfessor = VirtualProfessor(BuildConfig.MY_API_KEY)
-
-        // Recupera la materia seleccionada desde el intent
         selectedSubject = intent.getStringExtra("subject")
 
-        // Agrega un log para verificar el valor recuperado
-        Log.d("ChatActivity", "Selected subject: $selectedSubject")
-
-        // Si hay una materia seleccionada, agrega un mensaje de bienvenida
         selectedSubject?.let {
             addMessageToChat("Has seleccionado el profesor de $it.")
         }
 
-        // Configura el botón de enviar
         sendButton.setOnClickListener {
-            sendButton.isEnabled = false  // Desactiva el botón
             sendMessage()
         }
     }
 
     private fun sendMessage() {
-        val message = chatInput.text.toString().trim()  // Obtiene el texto del input
-
+        val message = chatInput.text.toString().trim()
         if (message.isNotEmpty()) {
-            // Agrega el mensaje del usuario al chat
             addMessageToChat("Tú: $message")
+            val callback: (String?) -> Unit = { response -> displayResponse(response) }
 
-            // Verifica si hay una materia seleccionada
-            selectedSubject?.let { subject ->
-                // Normaliza la materia seleccionada
-                val normalizedSubject = subject.trim().lowercase(Locale.ROOT)
-
-                // Genera una respuesta simulada basada en la materia seleccionada y el mensaje del usuario
-                val response = generateSimulatedResponse(message, normalizedSubject)
-
-                // Agrega la respuesta simulada al chat
-                addResponseMessage(response)
-            } ?: run {
-                // Si no hay materia seleccionada, muestra un mensaje de error
-                addResponseMessage("Lo siento, no se ha seleccionado un profesor. Por favor, selecciona una materia antes de enviar un mensaje.")
+            when (selectedSubject) {
+                "Matemáticas" -> virtualProfessor.onMathProfessorSelected(message, callback)
+                "Lenguaje" -> virtualProfessor.onLanguageProfessorSelected(message, callback)
+                "Historia" -> virtualProfessor.onHistoryProfessorSelected(message, callback)
+                else -> displayResponse("Asignatura no reconocida.")
             }
 
-            // Limpia el campo de texto después de enviar el mensaje
             chatInput.text.clear()
-
-            // Hace que el chat se desplace automáticamente hacia abajo para mostrar el último mensaje
-            chatScrollView.post { chatScrollView.fullScroll(View.FOCUS_DOWN) }
         }
     }
 
-    // Método para generar una respuesta simulada
-    private fun generateSimulatedResponse(input: String, profesorActual: String): String {
-        // Limpia el valor de profesorActual
-        val profesorNormalizado = profesorActual.trim().lowercase(Locale.ROOT)
-
-        return when (profesorNormalizado) {
-            "matematicas", "matemáticas" -> {
-                when {
-                    input.contains("parábola", ignoreCase = true) -> "Una parábola es la gráfica de una función cuadrática. Tiene una forma curva y simétrica. Su ecuación general es y = ax² + bx + c."
-                    input.contains("parabola", ignoreCase = true) -> "Una parábola es la gráfica de una función cuadrática. Tiene una forma curva y simétrica. Su ecuación general es y = ax² + bx + c."
-                    input.contains("radio", ignoreCase = true) -> "La fórmula para el radio de un círculo es r = C / (2π), donde C es la circunferencia."
-                    input.contains("hexágono", ignoreCase = true) -> "Un hexágono es una figura geométrica de seis lados. Si es regular, sus lados y ángulos son iguales."
-                    input.contains("hexagono", ignoreCase = true) -> "Un hexágono es una figura geométrica de seis lados. Si es regular, sus lados y ángulos son iguales."
-                    input.contains("reto matemático", ignoreCase = true) -> "¡Claro! ¿Qué tal si calculas cuánto es 15 x 4?"
-                    input.contains("reto matematico", ignoreCase = true) -> "¡Claro! ¿Qué tal si calculas cuánto es 15 x 4?"
-                    input.contains("hola", ignoreCase = true) -> "¡Hola! ¿Cómo puedo ayudarte hoy?"
-                    else -> "Lo siento, solo puedo responder preguntas de matemáticas."
-                }
-            }
-            "lenguaje" -> {
-                when {
-                    input.contains("significado", ignoreCase = true) -> "Puedo ayudarte con el significado de palabras. ¿Cuál te gustaría saber?"
-                    input.contains("aprobar", ignoreCase = true) -> "Dar por bueno o suficiente algo o a alguien: Emitir un juicio positivo o favorable sobre un trabajo, proyecto, examen, etc. Por ejemplo, \"El profesor decidió aprobar mi entrega dos.\""
-                    input.contains("hola", ignoreCase = true) -> "¡Hola! ¿Cómo puedo ayudarte hoy?"
-                    input.contains("lenguaje", ignoreCase = true) -> "El lenguaje es esencial para la comunicación. ¿Te gustaría practicar algo?"
-                    input.contains("ortografía", ignoreCase = true) -> "La ortografía es importante. ¿Sabías que 'había' lleva acento porque es una palabra grave terminada en vocal?"
-                    else -> "Lo siento, solo puedo responder preguntas de lenguaje."
-                }
-            }
-            "historia" -> {
-                when {
-                    input.contains("Napoleón", ignoreCase = true) -> "Napoleón fue un líder militar y político francés."
-                    input.contains("hola", ignoreCase = true) -> "¡Hola! ¿Cómo puedo ayudarte hoy?"
-                    else -> "Lo siento, solo puedo responder preguntas de historia."
-                }
-            }
-            else -> "Lo siento, no reconozco ese profesor. Por favor selecciona matemáticas, lenguaje o historia."
+    private fun displayResponse(response: String?) {
+        runOnUiThread {
+            addMessageToChat(response ?: "No pude obtener una respuesta.")
+            sendButton.isEnabled = true
         }
     }
 
+    private fun addMessageToChat(message: String) {
+        // Crear un LinearLayout para envolver el TextView
+        val messageLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL // Cambiar a orientación horizontal para que los mensajes se alineen correctamente
+            setPadding(8, 8, 8, 8)
+        }
 
-    // Método para agregar mensajes al chat
-    fun addMessageToChat(message: String) {
-        val messageTextView = TextView(this)
-        messageTextView.text = message
-        messagesLayout.addView(messageTextView)
-        chatScrollView.post { chatScrollView.fullScroll(View.FOCUS_DOWN) }
+        // Crear el TextView que contiene el mensaje
+        val messageTextView = TextView(this).apply {
+            text = message
+            setPadding(10, 10, 10, 10)
+            setTextColor(getColor(android.R.color.black))  // Color de texto
+        }
+
+        // Verificar si es un mensaje del usuario o del asistente
+        if (message.startsWith("Tú:")) {
+            // Establecer fondo para el mensaje del usuario
+            messageTextView.setBackgroundResource(R.drawable.user_message_background)
+            messageLayout.gravity = Gravity.END  // Alineación a la derecha
+            messageTextView.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 16, 0)  // Margen derecho para los mensajes del usuario
+            }
+        } else {
+            // Establecer fondo para la respuesta del asistente
+            messageTextView.setBackgroundResource(R.drawable.assistant_message_background)
+            messageLayout.gravity = Gravity.START  // Alineación a la izquierda
+            messageTextView.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(16, 0, 0, 0)  // Margen izquierdo para las respuestas del asistente
+            }
+        }
+
+        // Agregar el TextView al LinearLayout
+        messageLayout.addView(messageTextView)
+
+        // Agregar el LinearLayout al layout principal
+        messagesLayout.addView(messageLayout)
+
+        // Desplazar el ScrollView hacia el final
+        chatScrollView.post {
+            chatScrollView.fullScroll(View.FOCUS_DOWN)
+        }
     }
 
-    // Método para manejar las respuestas y agregarlas al chat
-    fun addResponseMessage(response: String) {
-        val responseTextView = TextView(this)
-        responseTextView.text = response
-        messagesLayout.addView(responseTextView)
-        chatScrollView.post { chatScrollView.fullScroll(View.FOCUS_DOWN) }
-
-        // Reactiva el botón una vez recibida la respuesta
-        sendButton.isEnabled = true
-    }
 }

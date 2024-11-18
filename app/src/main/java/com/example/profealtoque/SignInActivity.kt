@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -21,20 +22,36 @@ class SignInActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance() // Obtiene una instancia de autenticación de Firebase
 
-        val btnSignin = findViewById<Button>(R.id.btnSignin) // Obtiene el botón de inicio de sesión
+        // Verifica si el usuario ya está autenticado
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // Si el usuario ya está logueado, redirígelo a la MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish() // Finaliza esta actividad para que no se pueda volver a ella
+        }
+
+        val btnSignin = findViewById<Button>(R.id.btnSignin)
         btnSignin.setOnClickListener {
-            val email = findViewById<EditText>(R.id.editTextText).text.toString().trim() // Obtiene y limpia el texto del campo de email
-            val password = findViewById<EditText>(R.id.editTextText2).text.toString().trim() // Obtiene y limpia el texto del campo de contraseña
+            val email = findViewById<EditText>(R.id.editTextText).text.toString().trim()
+            val password = findViewById<EditText>(R.id.editTextText2).text.toString().trim()
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
-                // Verifica si los campos no están vacíos antes de intentar el inicio de sesión
-                signInUser(email, password) // Llama a la función para iniciar sesión
+                signInUser(email, password)
             } else {
-                // Muestra un mensaje si los campos están vacíos
                 Toast.makeText(this, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
             }
         }
+
+        val forgotPasswordTextView = findViewById<TextView>(R.id.forgotPasswordTextView)
+        forgotPasswordTextView.setOnClickListener {
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
+            startActivity(intent)
+        }
     }
+
+
+
 
     // Función para autenticar al usuario usando Firebase Authentication
     private fun signInUser(email: String, password: String) {
@@ -52,7 +69,7 @@ class SignInActivity : AppCompatActivity() {
                     if (userId != null) {
                         // Verifica si el ID del usuario no es nulo
                         val logRef = database.getReference("logs/$userId") // Obtiene la referencia en la base de datos
-                        logRef.child("lastSignIn").setValue(currentTime) // Guarda la hora de inicio de sesión en Firebase bajo 'lastSignIn'
+                        logRef.child("Ultimo Inicio Sesion").setValue(currentTime) // Guarda la hora de inicio de sesión en Firebase
                     }
 
                     // Redirige al menú principal después del inicio de sesión exitoso
@@ -77,4 +94,5 @@ class SignInActivity : AppCompatActivity() {
         val intent = Intent(this, SignUpActivity::class.java) // Crea un intent para redirigir a la actividad de registro
         startActivity(intent) // Inicia la actividad de registro
     }
+
 }

@@ -40,10 +40,10 @@
             android:name=".MainActivity"
             android:exported="true" />
         <!-- Actividad de chat -->
-
         <activity
-            android:name=".PruebaActivity"
+            android:name=".ForgotPasswordActivity"
             android:exported="true" />
+
 
     </application>
 

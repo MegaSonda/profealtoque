@@ -1,4 +1,8 @@
+package com.example.ChatGPTAssitant
+import android.util.Log
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
@@ -6,27 +10,35 @@ class ChatGPTAssistant {
 
     private val client = OkHttpClient()
     private var lastRequestTime: Long = 0
-    private val REQUEST_DELAY_MS = 3000 // 3 segundos entre solicitudes
+    private val REQUEST_DELAY_MS = 3000
 
     fun askQuestion(apiKey: String, prompt: String, callback: (String?) -> Unit) {
+
         val currentTime = System.currentTimeMillis()
         val elapsedTime = currentTime - lastRequestTime
 
         if (elapsedTime < REQUEST_DELAY_MS) {
-            // Si no ha pasado suficiente tiempo desde la última solicitud, espera antes de hacer otra
             callback("Estás enviando solicitudes demasiado rápido. Espera un momento.")
             return
         }
 
         lastRequestTime = currentTime
 
-        val requestBody = FormBody.Builder()
-            .add("prompt", prompt)
-            .add("max_tokens", "150")
-            .build()
+        val json = JSONObject()
+        json.put("model", "gpt-3.5-turbo")
+
+        val messages = JSONArray().apply {
+            put(JSONObject().apply {
+                put("role", "user")
+                put("content", prompt)
+            })
+        }
+        json.put("messages", messages)
+        json.put("max_tokens", 150)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), json.toString())
 
         val request = Request.Builder()
-            .url("https://api.openai.com/v1/completions")
+            .url("https://api.openai.com/v1/chat/completions")
             .addHeader("Authorization", "Bearer $apiKey")
             .post(requestBody)
             .build()
@@ -34,22 +46,21 @@ class ChatGPTAssistant {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 callback("Error al conectar con la API: ${e.message}")
+                Log.e("ChatGPTAssistant", "Error: ${e.message}", e)
             }
 
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
-                    if (response.code == 429) {
-                        callback("Has excedido el límite de solicitudes. Intenta nuevamente en unos segundos.")
-                    } else {
-                        callback("Error en la respuesta: ${response.code}")
-                    }
+                    Log.e("ChatGPTAssistant", "Error en la respuesta: ${response.code}")
+                    callback("Error en la respuesta: ${response.code}")
                     return
                 }
 
                 val jsonResponse = JSONObject(response.body?.string() ?: "{}")
                 val responseText = jsonResponse.optJSONArray("choices")
                     ?.optJSONObject(0)
-                    ?.optString("text")
+                    ?.optJSONObject("message")
+                    ?.optString("content")
 
                 callback(responseText)
             }

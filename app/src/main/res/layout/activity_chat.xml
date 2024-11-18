@@ -25,7 +25,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="10dp"/>
+            android:padding="10dp">
+            <!-- Los mensajes se agregarán aquí dinámicamente -->
+        </LinearLayout>
     </ScrollView>
 
     <!-- Layout de entrada de mensaje y botón de enviar -->

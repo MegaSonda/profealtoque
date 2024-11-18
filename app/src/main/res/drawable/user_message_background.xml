@@ -1,0 +1,23 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fondo de la nube de chat -->
+    <solid android:color="#E3E0F1"/>
+
+    <!-- Bordes redondeados, pero sin redondear la esquina superior izquierda -->
+    <corners
+        android:topLeftRadius="16dp"
+        android:topRightRadius="0dp"
+        android:bottomLeftRadius="16dp"
+        android:bottomRightRadius="16dp"/>
+
+    <!-- Crear la viñeta (cachito hacia la izquierda) en la esquina superior izquierda -->
+    <path
+        android:fillColor="#D1C6E3"
+        android:pathData="M0,0 L16,16 L0,32 Z"/>
+
+    <!-- Agregar espacio entre el borde y el texto -->
+    <padding
+        android:left="16dp"
+        android:top="8dp"
+        android:right="16dp"
+        android:bottom="8dp"/>
+</shape>
